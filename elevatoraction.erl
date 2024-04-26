@@ -1,7 +1,9 @@
 -module(elevatoraction).
--export([start/0]).
+-export([start/2]).
 
-start() ->
-    People = person:create_people(10, 5),
+% This is the main function to set everything up
+% Pass in the # of floors and the # of people
+start(Floors, NumberOfPeople) ->
+    People = person:create_people(Floors, NumberOfPeople),
     Elevator = elevator:start(People),
     {People, Elevator}.

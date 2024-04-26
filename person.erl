@@ -1,9 +1,11 @@
 -module(person).
 -export([init/2, create_people/2]).
 
+% Starts the person process
 init(CurrentFloor, DesiredFloor) ->
     spawn(fun() -> initializing(CurrentFloor, DesiredFloor) end).
 
+% Waits to obtain the elevator process and then tells elevator which floor it is on.
 initializing(CurrentFloor, DesiredFloor) ->
     io:format("[~p->~p] waiting on floor ~p~n", [CurrentFloor, DesiredFloor, CurrentFloor]),
     receive
@@ -13,6 +15,8 @@ initializing(CurrentFloor, DesiredFloor) ->
             waiting_for_elevator(Elevator, CurrentFloor, DesiredFloor)
     end.
 
+% waits for elevator to reach current floor, gets on elevator, presses button for desired floor
+% if elevator signals and it isn't the floor person wants, person must ack to ensure proper operation
 waiting_for_elevator(Elevator, CurrentFloor, DesiredFloor) ->
     receive
         {Elevator, on_floor, CurrentFloor}  ->
@@ -28,6 +32,8 @@ waiting_for_elevator(Elevator, CurrentFloor, DesiredFloor) ->
             waiting_for_elevator(Elevator, CurrentFloor, DesiredFloor)
     end.
 
+% person on elevator, waiting till it hits the correct floor
+% person must still ack even if not correct floor
 waiting_for_floor(_Elevator, CurrentFloor, DesiredFloor) ->
     receive
         {From, on_floor, DesiredFloor} ->
@@ -38,10 +44,12 @@ waiting_for_floor(_Elevator, CurrentFloor, DesiredFloor) ->
             waiting_for_floor(_Elevator, CurrentFloor, DesiredFloor)
     end.
 
+% Noting person is done, but must still process messages from elevator
 done(CurrentFloor, DesiredFloor) ->
     io:format("[~p->~p] getting off at floor ~p~n", [CurrentFloor, DesiredFloor, DesiredFloor]),
     process_end().
 
+% processing messages from elevator to ensure proper operation
 process_end() ->
     receive
         {From, on_floor, Floor} ->
@@ -49,6 +57,7 @@ process_end() ->
             process_end()
     end.
 
+% creates random number from 0 to Total that is NotThis
 valid_random(Number, NotThis, Total) ->
     case Number of 
         NotThis ->
@@ -58,6 +67,7 @@ valid_random(Number, NotThis, Total) ->
             Number
     end. 
 
+% creates Count people and places them on random floors searching for other random floors
 create_people(MaxFloor, Count) ->
     [
         begin
